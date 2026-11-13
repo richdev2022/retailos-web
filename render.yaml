@@ -1,0 +1,34 @@
+# Render deployment config for the RetailOS web app (dashboard / POS / inventory UI).
+# Docs: https://render.com/docs/blueprint-spec
+# How to use:
+#   1. Push this file to your repo's main branch.
+#   2. In Render dashboard: New → Blueprint → select this repo.
+#   3. Render will detect this render.yaml and prompt to create the service.
+#   4. Add the environment variables (see envVars below).
+# After deploy, your web app will be live at https://retailos-web.onrender.com.
+
+services:
+  - type: web
+    name: retailos-web
+    runtime: static
+    plan: free  # static sites are free on Render
+    branch: main
+    rootDir: .
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    pullRequestPreviewsEnabled: true
+    autoDeploy: true
+    envVars:
+      # --- Required ---
+      - key: VITE_API_URL
+        value: https://retailos-backend.onrender.com  # Backend API URL
+      # --- Optional ---
+      - key: VITE_USE_MOCK
+        value: "false"  # set to "true" for demo without backend
+      - key: VITE_APP_NAME
+        value: RetailOS
+
+    # SPA routing — let React Router handle all paths
+    routes:
+      - source: /*
+        destination: /index.html
