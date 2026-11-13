@@ -750,3 +750,128 @@ export const settingsService = {
     return http.patch<AppSettings>(endpoints.settings.base, body);
   },
 };
+
+// =====================================================
+// Payment methods + subscription charges (Flutterwave)
+// =====================================================
+
+export interface SavedCard {
+  id: string;
+  brand: string;
+  last4: string;
+  first6: string;
+  issuer: string | null;
+  country: string | null;
+  cardType: string | null;
+  expiry: string | null;
+  isDefault: boolean;
+  isActive: boolean;
+  lastUsedAt: string | null;
+  createdAt: string;
+}
+
+export interface SubscriptionChargeRecord {
+  id: string;
+  txRef: string;
+  amountMinor: string;
+  currency: string;
+  status: 'PENDING' | 'REQUIRES_OTP' | 'SUCCESSFUL' | 'FAILED' | 'REFUNDED' | 'CANCELLED';
+  narration: string | null;
+  chargeResponseMessage: string | null;
+  failureReason: string | null;
+  attemptedAt: string;
+  finalizedAt: string | null;
+  retryCount: number;
+  plan: { id: string; name: string } | null;
+  card: { id: string; brand: string; last4: string } | null;
+}
+
+export interface SubscriptionEventRecord {
+  id: string;
+  type: string;
+  description: string;
+  amountMinor: string | null;
+  currency: string | null;
+  chargeId: string | null;
+  cardId: string | null;
+  plan: { id: string; name: string } | null;
+  createdAt: string;
+}
+
+export interface PaginatedResponse<T> {
+  items: T[];
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
+export const paymentService = {
+  async getPublicKey(): Promise<{ publicKey: string; title: string; logoUrl: string }> {
+    if (USE_MOCK) {
+      await sleep(200);
+      return { publicKey: 'FLWPUBK_TEST-mock-key-X', title: 'RetailOS Subscription', logoUrl: '' };
+    }
+    return http.get('/payments/public-key');
+  },
+  async listCards(): Promise<SavedCard[]> {
+    if (USE_MOCK) {
+      await sleep(250);
+      return [
+        { id: 'card_demo_1', brand: 'VISA', last4: '4242', first6: '424242', issuer: 'GTBank', country: 'NG', cardType: 'VISA', expiry: '12/28', isDefault: true, isActive: true, lastUsedAt: new Date(Date.now() - 86400000).toISOString(), createdAt: new Date(Date.now() - 30 * 86400000).toISOString() },
+      ];
+    }
+    return http.get('/payments/cards');
+  },
+  async addCard(body: { cardNumber: string; cvv: string; expiryMonth: string; expiryYear: string; pin?: string }): Promise<SavedCard | { status: 'pending_otp' | 'pending_3ds'; flwRef?: string; authUrl?: string; flwTransactionId?: number; txRef: string; chargeResponseMessage?: string }> {
+    if (USE_MOCK) {
+      await sleep(800);
+      return { id: 'card_demo_' + Date.now(), brand: 'MASTERCARD', last4: body.cardNumber.slice(-4), first6: body.cardNumber.slice(0, 6), issuer: 'GTBank', country: 'NG', cardType: 'MASTERCARD', expiry: `${body.expiryMonth}/${body.expiryYear}`, isDefault: false, isActive: true, lastUsedAt: null, createdAt: new Date().toISOString() };
+    }
+    return http.post('/payments/cards', body);
+  },
+  async removeCard(id: string, force = false): Promise<void> {
+    if (USE_MOCK) { await sleep(500); return; }
+    await http.delete(`/payments/cards/${id}${force ? '?force=true' : ''}`);
+  },
+  async setDefaultCard(id: string): Promise<void> {
+    if (USE_MOCK) { await sleep(400); return; }
+    await http.post(`/payments/cards/${id}/default`);
+  },
+  async chargeNow(body: { planId?: string; cardId?: string; interval: 'monthly' | 'annual' }): Promise<{ chargeId: string; txRef: string; status: string; flwTransactionId?: number; subscriptionId?: string; newEndDate?: string; amountMinor?: string; currency?: string; message?: string; authUrl?: string }> {
+    if (USE_MOCK) {
+      await sleep(1000);
+      return { chargeId: 'chg_demo_' + Date.now(), txRef: 'MOCK-' + Date.now(), status: 'SUCCESSFUL', newEndDate: new Date(Date.now() + 30 * 86400000).toISOString(), amountMinor: '1500000', currency: 'NGN' };
+    }
+    return http.post('/payments/charge', body);
+  },
+  async listCharges(page = 1, limit = 20): Promise<PaginatedResponse<SubscriptionChargeRecord>> {
+    if (USE_MOCK) {
+      await sleep(300);
+      return {
+        items: [
+          { id: 'chg_demo_1', txRef: 'FLW-retailos-1234-abc', amountMinor: '1500000', currency: 'NGN', status: 'SUCCESSFUL', narration: 'Monthly renewal — Pro plan', chargeResponseMessage: 'Approved', failureReason: null, attemptedAt: new Date(Date.now() - 86400000).toISOString(), finalizedAt: new Date(Date.now() - 86400000).toISOString(), retryCount: 0, plan: { id: 'plan_pro', name: 'Pro' }, card: { id: 'card_demo_1', brand: 'VISA', last4: '4242' } },
+        ],
+        page: 1, limit: 20, total: 1, totalPages: 1,
+      };
+    }
+    return http.get('/payments/charges', { page, limit });
+  },
+  async retryCharge(id: string): Promise<{ chargeId: string; status: string }> {
+    if (USE_MOCK) { await sleep(800); return { chargeId: id, status: 'SUCCESSFUL' }; }
+    return http.post(`/payments/charges/${id}/retry`);
+  },
+  async listEvents(page = 1, limit = 20): Promise<PaginatedResponse<SubscriptionEventRecord>> {
+    if (USE_MOCK) {
+      await sleep(300);
+      return {
+        items: [
+          { id: 'evt_1', type: 'CHARGE_SUCCESSFUL', description: 'Charged ₦15,000 for Pro plan', amountMinor: '1500000', currency: 'NGN', chargeId: 'chg_demo_1', cardId: 'card_demo_1', plan: { id: 'plan_pro', name: 'Pro' }, createdAt: new Date(Date.now() - 86400000).toISOString() },
+          { id: 'evt_2', type: 'CARD_ADDED', description: 'Added VISA card ending 4242', amountMinor: null, currency: null, chargeId: null, cardId: 'card_demo_1', plan: null, createdAt: new Date(Date.now() - 30 * 86400000).toISOString() },
+        ],
+        page: 1, limit: 20, total: 2, totalPages: 1,
+      };
+    }
+    return http.get('/payments/events', { page, limit });
+  },
+};
