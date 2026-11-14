@@ -1,5 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
-  <rect width="32" height="32" rx="8" fill="#0F172A"/>
-  <path d="M9 11h14v2H9zM9 15h14v2H9zM9 19h9v2H9z" fill="#10B981"/>
-  <circle cx="22" cy="20" r="2" fill="#10B981"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Background: dark rounded square -->
+  <rect width="512" height="512" rx="112" fill="#0F172A"/>
+  <!-- Inner gradient circle (emerald glow) -->
+  <circle cx="256" cy="256" r="180" fill="none" stroke="#10B981" stroke-width="3" opacity="0.15"/>
+  <!-- Stylized "R" letterform -->
+  <path d="M180 140 L180 372 L220 372 L220 280 L255 280 L310 372 L358 372 L298 272 Q330 262 346 238 Q362 214 362 188 Q362 156 342 138 Q322 120 288 120 L180 140 Z M220 172 L278 172 Q294 172 304 182 Q314 192 314 210 Q314 228 304 238 Q294 248 278 248 L220 248 Z" fill="#10B981"/>
+  <!-- Accent: small dot (represents POS/sale) -->
+  <circle cx="340" cy="160" r="14" fill="#10B981"/>
+  <circle cx="340" cy="160" r="6" fill="#0F172A"/>
 </svg>
