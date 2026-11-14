@@ -21,7 +21,7 @@ services:
     envVars:
       # --- Required ---
       - key: VITE_API_URL
-        value: https://retailos-backend.onrender.com  # Backend API URL
+        value: https://retailos-backend-v3lw.onrender.com  # Backend API URL
       # --- Optional ---
       - key: VITE_USE_MOCK
         value: "false"  # set to "true" for demo without backend
