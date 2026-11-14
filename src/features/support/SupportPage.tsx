@@ -114,7 +114,7 @@ function CreateTicketDialog({ open, onOpenChange }: { open: boolean; onOpenChang
   React.useEffect(() => { if (!open) reset(); }, [open, reset]);
   const priority = watch('priority');
   const mutation = useMutation({
-    mutationFn: (v: FormValues) => supportService.create({ subject: v.subject, message: v.message, priority: v.priority }),
+    mutationFn: (v: FormValues) => supportService.create({ subject: v.subject, description: v.message, priority: v.priority }),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['support-tickets'] }); toast.success('Ticket created'); onOpenChange(false); },
     onError: (err) => toast.error(err instanceof ApiError ? err.message : 'Failed to create ticket'),
   });

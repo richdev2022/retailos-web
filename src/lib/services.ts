@@ -725,12 +725,12 @@ export const supportService = {
     }
     return http.get<SupportTicket[]>(endpoints.support.base);
   },
-  async create(body: { subject: string; message: string; priority?: string }): Promise<SupportTicket> {
+  async create(body: { subject: string; description: string; priority?: string }): Promise<SupportTicket> {
     if (USE_MOCK) {
       await sleep(700);
-      return { id: uid('tkt_'), subject: body.subject, message: body.message, status: 'OPEN', priority: (body.priority as SupportTicket['priority']) ?? 'MEDIUM', createdAt: new Date().toISOString() };
+      return { id: uid('tkt_'), subject: body.subject, message: body.description, status: 'OPEN', priority: (body.priority as SupportTicket['priority']) ?? 'MEDIUM', createdAt: new Date().toISOString() };
     }
-    return http.post<SupportTicket>(endpoints.support.base, body);
+    return http.post<SupportTicket>(endpoints.support.base, { ...body, message: body.description });
   },
 };
 
