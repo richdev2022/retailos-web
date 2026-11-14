@@ -129,7 +129,7 @@ function CreateExpenseDialog({ open, onOpenChange, currency }: { open: boolean; 
 
   const mutation = useMutation({
     mutationFn: (v: FormValues) => expenseService.create({
-      category: v.category, description: v.description, amountMinor: majorToMinorString(v.amount),
+      title: v.description, description: v.description, amount: String(v.amount), category: v.category,
       paymentMethod: v.paymentMethod as PaymentMethod, reference: v.reference || null, expenseDate: new Date(v.expenseDate).toISOString(), notes: v.notes,
     }),
     onSuccess: () => {
