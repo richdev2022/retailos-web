@@ -104,7 +104,7 @@ export default function LoginPage() {
         </div>
       </div>
 
-      <Button variant="outline" size="lg" className="w-full" onClick={() => toast.info('Phone OTP login coming soon')}>
+      <Button variant="outline" size="lg" className="w-full" onClick={() => toast.info('Phone OTP login will be available after phone verification is set up')}>
         <Phone className="h-4 w-4" /> Continue with phone
       </Button>
     </AuthLayout>
